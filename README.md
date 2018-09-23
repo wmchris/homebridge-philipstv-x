@@ -1,5 +1,6 @@
 # homebridge-philipstv-X
-Homebridge module for Philips TV (with JointSpace enabled)
+Homebridge module for Philips TV (with JointSpace enabled)  
+This Version includes a simple switch for the three color modes for the ambilight (red,blue,green)  
 
 # Description
 

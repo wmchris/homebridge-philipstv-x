@@ -91,6 +91,18 @@ function HttpStatusAccessory(log, config) {
 		"isExpert": false,
 		"menuSetting": "DEEP_WATER"
 	});
+	
+	this.on_body_ambilight_color4 = JSON.stringify({
+		"styleName": "FOLLOW_COLOR",
+		"isExpert": false,
+		"menuSetting": "ISF"
+	});
+	
+	this.on_body_ambilight_color5 = JSON.stringify({
+		"styleName": "FOLLOW_COLOR",
+		"isExpert": false,
+		"menuSetting": "PTA_LOUNGE"
+	});
 
 	this.off_url_ambilight = this.status_url_ambilight
 	this.off_body_ambilight = JSON.stringify({
@@ -400,7 +412,14 @@ HttpStatusAccessory.prototype = {
 			return;
 		}
 
-        	var url = this.on_url_ambilight;
+		if (this.wol_url) {
+			that.log('setPowerState - WOL request done..');
+			this.wolRequest(this.wol_url, function(error, response) {
+				that.log('setPowerState - WOL callback response: %s', response);
+			});
+		}
+		
+        var url = this.on_url_ambilight;
 		if(this.on_color == 1)
 		{
 			this.on_color = 2;
@@ -413,18 +432,38 @@ HttpStatusAccessory.prototype = {
 		}
 		else if(this.on_color == 3)
 		{
+			this.on_color = 4;
+			var body = this.on_body_ambilight_color4;
+		}
+		else if(this.on_color == 4)
+		{
+			this.on_color = 5;
+			var body = this.on_body_ambilight_color5;
+		}
+		else if(this.on_color == 5)
+		{
 			this.on_color = 1;
 			var body = this.on_body_ambilight_color1;
 		}
 		
-        this.log("setAmbilightState - setting state to %s", ambilightState ? "ON" : "OFF");
+        this.log("setAmbilightColor - setting state to %s", "ON");
+        this.state_ambilight = true;
+        ambilightState = true;
+        if (this.ambilightService) {
+					this.ambilightService.getCharacteristic(Characteristic.On).setValue(true, null, "statuspoll");
+		}
+		
+		if (this.ambilightColService) {
+					this.ambilightColService.getCharacteristic(Characteristic.On).setValue(true, null, "statuspoll");
+		}
+
 
         that.httpRequest(url, body, "POST", this.api_version, function(error, response, responseBody) {
             if (error) {
-				that.log('setAmbilightState - failed: %s', error.message);
+				that.log('setAmbilightColor - failed: %s', error.message);
 				callback(new Error("HTTP attempt failed"), false);
             } else {
-                that.log('setAmbilightState - succeeded - current state: %s', ambilightState);
+                that.log('setAmbilightColor - succeeded - current state: %s', ambilightState);
                 callback(null, ambilightState);
             }
         });
@@ -465,6 +504,10 @@ HttpStatusAccessory.prototype = {
 				that.log("setAmbilightState - ERROR: %s", error);
 				if (that.ambilightService) {
 					that.ambilightService.getCharacteristic(Characteristic.On).setValue(that.state_ambilight, null, "statuspoll");
+				}
+				
+				if (that.ambilightColService) {
+					that.ambilightColService.getCharacteristic(Characteristic.On).setValue(that.state_ambilight, null, "statuspoll");
 				}
 			}
 			callback(error, that.state_ambilight);
